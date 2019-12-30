@@ -266,10 +266,11 @@ func stopDNSServer() error {
 		return errorx.Decorate(err, "Couldn't stop forwarding DNS server")
 	}
 
-	return closeDNSServer()
+	closeDNSServer()
+	return nil
 }
 
-func closeDNSServer() error {
+func closeDNSServer() {
 	// DNS forward module must be closed BEFORE stats or queryLog because it depends on them
 	if Context.dnsServer != nil {
 		Context.dnsServer.Close()
@@ -297,5 +298,4 @@ func closeDNSServer() error {
 	}
 
 	log.Debug("Closed all DNS modules")
-	return nil
 }
