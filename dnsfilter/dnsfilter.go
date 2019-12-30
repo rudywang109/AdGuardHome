@@ -613,6 +613,10 @@ func New(c *Config, filters map[int]string) *Dnsfilter {
 		}
 	}
 
+	return d
+}
+
+func (d *Dnsfilter) Start() {
 	d.filtersInitializerChan = make(chan filtersInitializerParams, 1)
 	go d.filtersInitializer()
 
@@ -620,7 +624,6 @@ func New(c *Config, filters map[int]string) *Dnsfilter {
 		d.registerSecurityHandlers()
 		d.registerRewritesHandlers()
 	}
-	return d
 }
 
 //
