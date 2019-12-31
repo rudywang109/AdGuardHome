@@ -15,7 +15,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -346,45 +345,6 @@ func parseParametersFromBody(r io.Reader) (map[string]string, error) {
 }
 
 func (d *Dnsfilter) handleParentalEnable(w http.ResponseWriter, r *http.Request) {
-	parameters, err := parseParametersFromBody(r.Body)
-	if err != nil {
-		httpError(r, w, http.StatusBadRequest, "failed to parse parameters from body: %s", err)
-		return
-	}
-
-	sensitivity, ok := parameters["sensitivity"]
-	if !ok {
-		http.Error(w, "Sensitivity parameter was not specified", 400)
-		return
-	}
-
-	switch sensitivity {
-	case "3":
-		break
-	case "EARLY_CHILDHOOD":
-		sensitivity = "3"
-	case "10":
-		break
-	case "YOUNG":
-		sensitivity = "10"
-	case "13":
-		break
-	case "TEEN":
-		sensitivity = "13"
-	case "17":
-		break
-	case "MATURE":
-		sensitivity = "17"
-	default:
-		http.Error(w, "Sensitivity must be set to valid value", 400)
-		return
-	}
-	i, err := strconv.Atoi(sensitivity)
-	if err != nil {
-		http.Error(w, "Sensitivity must be set to valid value", 400)
-		return
-	}
-	d.Config.ParentalSensitivity = i
 	d.Config.ParentalEnabled = true
 	d.Config.ConfigModified()
 }
@@ -397,9 +357,6 @@ func (d *Dnsfilter) handleParentalDisable(w http.ResponseWriter, r *http.Request
 func (d *Dnsfilter) handleParentalStatus(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"enabled": d.Config.ParentalEnabled,
-	}
-	if d.Config.ParentalEnabled {
-		data["sensitivity"] = d.Config.ParentalSensitivity
 	}
 	jsonVal, err := json.Marshal(data)
 	if err != nil {

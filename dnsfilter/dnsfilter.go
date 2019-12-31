@@ -43,7 +43,6 @@ type RewriteEntry struct {
 
 // Config allows you to configure DNS filtering with New() or just change variables directly.
 type Config struct {
-	ParentalSensitivity int    `yaml:"parental_sensitivity"` // must be either 3, 10, 13 or 17
 	ParentalEnabled     bool   `yaml:"parental_enabled"`
 	SafeSearchEnabled   bool   `yaml:"safesearch_enabled"`
 	SafeBrowsingEnabled bool   `yaml:"safebrowsing_enabled"`

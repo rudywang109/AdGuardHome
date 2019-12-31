@@ -310,7 +310,6 @@ func TestSafeSearchCacheGoogle(t *testing.T) {
 func TestParentalControl(t *testing.T) {
 	d := NewForTest(&Config{ParentalEnabled: true}, nil)
 	defer d.Close()
-	d.ParentalSensitivity = 3
 	d.checkMatch(t, "pornhub.com")
 	d.checkMatch(t, "www.pornhub.com")
 	d.checkMatchEmpty(t, "www.yandex.ru")
@@ -422,7 +421,6 @@ func TestClientSettings(t *testing.T) {
 	filters[0] = "||example.org^\n"
 	d := NewForTest(&Config{ParentalEnabled: true, SafeBrowsingEnabled: false}, filters)
 	defer d.Close()
-	d.ParentalSensitivity = 3
 
 	// no client settings:
 
