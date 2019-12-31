@@ -9,6 +9,12 @@ import (
 	"github.com/AdguardTeam/golibs/log"
 )
 
+func rewriteArrayDup(a []RewriteEntry) []RewriteEntry {
+	a2 := make([]RewriteEntry, len(a))
+	copy(a2, a)
+	return a2
+}
+
 type rewriteEntryJSON struct {
 	Domain string `json:"domain"`
 	Answer string `json:"answer"`
@@ -36,6 +42,34 @@ func (d *Dnsfilter) handleRewriteList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Wildcards are at the bottom
+func addRewrite(ar []RewriteEntry, ent RewriteEntry) []RewriteEntry {
+	isWC := false
+	if isWildcard(ent.Domain) {
+		isWC = true
+	}
+	if isWC {
+		return append(ar, ent)
+	}
+
+	wc := -1
+	for i, r := range ar {
+		if isWildcard(r.Domain) {
+			wc = i
+			break
+		}
+	}
+	if wc < 0 {
+		return append(ar, ent)
+	}
+
+	new := []RewriteEntry{}
+	new = append(new, ar[0:wc]...)
+	new = append(new, ent)
+	new = append(new, ar[wc:]...)
+	return new
+}
+
 func (d *Dnsfilter) handleRewriteAdd(w http.ResponseWriter, r *http.Request) {
 
 	jsent := rewriteEntryJSON{}
@@ -50,7 +84,7 @@ func (d *Dnsfilter) handleRewriteAdd(w http.ResponseWriter, r *http.Request) {
 		Answer: jsent.Answer,
 	}
 	d.confLock.Lock()
-	d.Config.Rewrites = append(d.Config.Rewrites, ent)
+	d.Config.Rewrites = addRewrite(d.Config.Rewrites, ent)
 	d.confLock.Unlock()
 	log.Debug("Rewrites: added element: %s -> %s [%d]",
 		ent.Domain, ent.Answer, len(d.Config.Rewrites))

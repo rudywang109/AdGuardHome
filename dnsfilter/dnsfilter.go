@@ -176,7 +176,10 @@ func (d *Dnsfilter) GetConfig() RequestFilteringSettings {
 
 // WriteDiskConfig - write configuration
 func (d *Dnsfilter) WriteDiskConfig(c *Config) {
+	d.confLock.Lock()
 	*c = d.Config
+	c.Rewrites = rewriteArrayDup(d.Config.Rewrites)
+	d.confLock.Unlock()
 }
 
 // SetFilters - set new filters (synchronously or asynchronously)
@@ -344,10 +347,14 @@ func (d *Dnsfilter) CheckHost(host string, qtype uint16, setts *RequestFiltering
 	return Result{}, nil
 }
 
+func isWildcard(host string) bool {
+	return len(host) >= 2 &&
+		host[0] == '*' && host[1] == '.'
+}
+
 // Return TRUE of host name matches a wildcard pattern
 func matchDomainWildcard(host, wildcard string) bool {
-	return len(wildcard) >= 2 &&
-		wildcard[0] == '*' && wildcard[1] == '.' &&
+	return isWildcard(wildcard) &&
 		strings.HasSuffix(host, wildcard[1:])
 }
 
@@ -381,6 +388,12 @@ func (d *Dnsfilter) processRewrites(host string, qtype uint16) Result {
 
 	for _, r := range d.Rewrites {
 		if r.Domain != host {
+			if !isWildcard(r.Domain) {
+				continue
+			}
+			if len(res.IPList) != 0 {
+				break // don't process wildcards
+			}
 			if !matchDomainWildcard(host, r.Domain) {
 				continue
 			}
