@@ -3,16 +3,13 @@
 package dnsfilter
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -322,26 +319,6 @@ func (d *Dnsfilter) handleSafeBrowsingStatus(w http.ResponseWriter, r *http.Requ
 		httpError(r, w, http.StatusInternalServerError, "Unable to write response json: %s", err)
 		return
 	}
-}
-
-func parseParametersFromBody(r io.Reader) (map[string]string, error) {
-	parameters := map[string]string{}
-
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) == 0 {
-			// skip empty lines
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			return parameters, errors.New("Got invalid request body")
-		}
-		parameters[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
-	}
-
-	return parameters, nil
 }
 
 func (d *Dnsfilter) handleParentalEnable(w http.ResponseWriter, r *http.Request) {
