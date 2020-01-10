@@ -476,14 +476,15 @@ func TestRewrites(t *testing.T) {
 	d := Dnsfilter{}
 	// CNAME, A, AAAA
 	d.Rewrites = []RewriteEntry{
-		RewriteEntry{"somecname", "somehost.com"},
-		RewriteEntry{"somehost.com", "0.0.0.0"},
+		RewriteEntry{"somecname", "somehost.com", 0, nil},
+		RewriteEntry{"somehost.com", "0.0.0.0", 0, nil},
 
-		RewriteEntry{"host.com", "1.2.3.4"},
-		RewriteEntry{"host.com", "1.2.3.5"},
-		RewriteEntry{"host.com", "1:2:3::4"},
-		RewriteEntry{"www.host.com", "host.com"},
+		RewriteEntry{"host.com", "1.2.3.4", 0, nil},
+		RewriteEntry{"host.com", "1.2.3.5", 0, nil},
+		RewriteEntry{"host.com", "1:2:3::4", 0, nil},
+		RewriteEntry{"www.host.com", "host.com", 0, nil},
 	}
+	d.prepareRewrites()
 	r := d.processRewrites("host2.com", dns.TypeA)
 	assert.Equal(t, NotFilteredNotFound, r.Reason)
 
@@ -501,9 +502,10 @@ func TestRewrites(t *testing.T) {
 
 	// wildcard
 	d.Rewrites = []RewriteEntry{
-		RewriteEntry{"host.com", "1.2.3.4"},
-		RewriteEntry{"*.host.com", "1.2.3.5"},
+		RewriteEntry{"host.com", "1.2.3.4", 0, nil},
+		RewriteEntry{"*.host.com", "1.2.3.5", 0, nil},
 	}
+	d.prepareRewrites()
 	r = d.processRewrites("host.com", dns.TypeA)
 	assert.Equal(t, ReasonRewrite, r.Reason)
 	assert.True(t, r.IPList[0].Equal(net.ParseIP("1.2.3.4")))
@@ -517,9 +519,10 @@ func TestRewrites(t *testing.T) {
 
 	// override a wildcard
 	d.Rewrites = []RewriteEntry{
-		RewriteEntry{"a.host.com", "1.2.3.4"},
-		RewriteEntry{"*.host.com", "1.2.3.5"},
+		RewriteEntry{"a.host.com", "1.2.3.4", 0, nil},
+		RewriteEntry{"*.host.com", "1.2.3.5", 0, nil},
 	}
+	d.prepareRewrites()
 	r = d.processRewrites("a.host.com", dns.TypeA)
 	assert.Equal(t, ReasonRewrite, r.Reason)
 	assert.True(t, len(r.IPList) == 1)
@@ -527,26 +530,14 @@ func TestRewrites(t *testing.T) {
 
 	// wildcard + CNAME
 	d.Rewrites = []RewriteEntry{
-		RewriteEntry{"host.com", "1.2.3.4"},
-		RewriteEntry{"*.host.com", "host.com"},
+		RewriteEntry{"host.com", "1.2.3.4", 0, nil},
+		RewriteEntry{"*.host.com", "host.com", 0, nil},
 	}
+	d.prepareRewrites()
 	r = d.processRewrites("www.host.com", dns.TypeA)
 	assert.Equal(t, ReasonRewrite, r.Reason)
 	assert.Equal(t, "host.com", r.CanonName)
 	assert.True(t, r.IPList[0].Equal(net.ParseIP("1.2.3.4")))
-}
-
-func TestAddRewrite(t *testing.T) {
-	ar := []RewriteEntry{
-		RewriteEntry{"host.com", "host.com"},
-		RewriteEntry{"*.host.com", "host.com"},
-	}
-	ar = addRewrite(ar, RewriteEntry{"*.host2.com", "host.com"})
-	ar = addRewrite(ar, RewriteEntry{"host2.com", "host.com"})
-	assert.True(t, ar[0].Domain == "host.com")
-	assert.True(t, ar[1].Domain == "host2.com")
-	assert.True(t, ar[2].Domain == "*.host.com")
-	assert.True(t, ar[3].Domain == "*.host2.com")
 }
 
 // BENCHMARKS

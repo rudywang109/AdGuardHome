@@ -4,10 +4,116 @@ package dnsfilter
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/AdguardTeam/golibs/log"
+	"github.com/miekg/dns"
 )
+
+// RewriteEntry is a rewrite array element
+type RewriteEntry struct {
+	Domain string `yaml:"domain"`
+	Answer string `yaml:"answer"` // IP address or canonical name
+	Type   uint16 `yaml:"-"`
+	IP     net.IP `yaml:"-"`
+}
+
+func (r *RewriteEntry) equals(b RewriteEntry) bool {
+	return r.Domain == b.Domain && r.Answer == b.Answer
+}
+
+func isWildcard(host string) bool {
+	return len(host) >= 2 &&
+		host[0] == '*' && host[1] == '.'
+}
+
+// Return TRUE of host name matches a wildcard pattern
+func matchDomainWildcard(host, wildcard string) bool {
+	return isWildcard(wildcard) &&
+		strings.HasSuffix(host, wildcard[1:])
+}
+
+type rewritesArray []RewriteEntry
+
+func (a rewritesArray) Len() int { return len(a) }
+
+func (a rewritesArray) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+// Priority: CNAME, A/AAAA;  exact, wildcard.
+func (a rewritesArray) Less(i, j int) bool {
+	if a[i].Type == dns.TypeCNAME && a[j].Type != dns.TypeCNAME {
+		return false
+	} else if a[i].Type != dns.TypeCNAME && a[j].Type == dns.TypeCNAME {
+		return true
+	}
+
+	if isWildcard(a[i].Domain) && !isWildcard(a[j].Domain) {
+		return false
+	} else if !isWildcard(a[i].Domain) && isWildcard(a[j].Domain) {
+		return true
+	}
+
+	return i < j
+}
+
+// Prepare entry for use
+func (r *RewriteEntry) prepare() {
+	ip := net.ParseIP(r.Answer)
+	if ip == nil {
+		r.Type = dns.TypeCNAME
+		return
+	}
+
+	r.IP = ip
+	r.Type = dns.TypeAAAA
+
+	ip4 := ip.To4()
+	if ip4 != nil {
+		r.IP = ip4
+		r.Type = dns.TypeA
+	}
+}
+
+func (d *Dnsfilter) prepareRewrites() {
+	for i := range d.Rewrites {
+		d.Rewrites[i].prepare()
+	}
+}
+
+// Get the list of matched rewrite entries.
+// Priority: CNAME, A/AAAA;  exact, wildcard.
+// If matched exactly, don't return wildcard entries.
+func findRewrites(a []RewriteEntry, host string) []RewriteEntry {
+	rr := rewritesArray{}
+	for _, r := range a {
+		if r.Domain != host {
+			if !matchDomainWildcard(host, r.Domain) {
+				continue
+			}
+		}
+		rr = append(rr, r)
+	}
+
+	if len(rr) == 0 {
+		return nil
+	}
+
+	sort.Sort(rr)
+
+	isWC := isWildcard(rr[0].Domain)
+	if !isWC {
+		for i, r := range rr {
+			if isWildcard(r.Domain) {
+				rr = rr[:i]
+				break
+			}
+		}
+	}
+	return rr
+}
 
 func rewriteArrayDup(a []RewriteEntry) []RewriteEntry {
 	a2 := make([]RewriteEntry, len(a))
@@ -42,34 +148,6 @@ func (d *Dnsfilter) handleRewriteList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Wildcards are at the bottom
-func addRewrite(ar []RewriteEntry, ent RewriteEntry) []RewriteEntry {
-	isWC := false
-	if isWildcard(ent.Domain) {
-		isWC = true
-	}
-	if isWC {
-		return append(ar, ent)
-	}
-
-	wc := -1
-	for i, r := range ar {
-		if isWildcard(r.Domain) {
-			wc = i
-			break
-		}
-	}
-	if wc < 0 {
-		return append(ar, ent)
-	}
-
-	new := []RewriteEntry{}
-	new = append(new, ar[0:wc]...)
-	new = append(new, ent)
-	new = append(new, ar[wc:]...)
-	return new
-}
-
 func (d *Dnsfilter) handleRewriteAdd(w http.ResponseWriter, r *http.Request) {
 
 	jsent := rewriteEntryJSON{}
@@ -83,8 +161,9 @@ func (d *Dnsfilter) handleRewriteAdd(w http.ResponseWriter, r *http.Request) {
 		Domain: jsent.Domain,
 		Answer: jsent.Answer,
 	}
+	ent.prepare()
 	d.confLock.Lock()
-	d.Config.Rewrites = addRewrite(d.Config.Rewrites, ent)
+	d.Config.Rewrites = append(d.Config.Rewrites, ent)
 	d.confLock.Unlock()
 	log.Debug("Rewrites: added element: %s -> %s [%d]",
 		ent.Domain, ent.Answer, len(d.Config.Rewrites))
@@ -108,7 +187,7 @@ func (d *Dnsfilter) handleRewriteDelete(w http.ResponseWriter, r *http.Request) 
 	arr := []RewriteEntry{}
 	d.confLock.Lock()
 	for _, ent := range d.Config.Rewrites {
-		if ent == entDel {
+		if ent.equals(entDel) {
 			log.Debug("Rewrites: removed element: %s -> %s", ent.Domain, ent.Answer)
 			continue
 		}
