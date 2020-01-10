@@ -20,7 +20,11 @@ f() {
 		mkdir -p dist/AdGuardHome
 		cp -pv {AdGuardHome,LICENSE.txt,README.md} dist/AdGuardHome/
 		pushd dist
-		tar zcvf AdGuardHome_"$GOOS"_"$GOARCH".tar.gz AdGuardHome/
+		if [[ $GOARCH == arm ]]; then
+			tar zcvf AdGuardHome_"$GOOS"_armv"$GOARM".tar.gz AdGuardHome/
+		else
+			tar zcvf AdGuardHome_"$GOOS"_"$GOARCH".tar.gz AdGuardHome/
+		fi
 		popd
 		rm -rf dist/AdguardHome
 	fi
@@ -37,6 +41,7 @@ mkdir -p $dst
 CHANNEL=$channel GOOS=darwin GOARCH=amd64 f
 CHANNEL=$channel GOOS=linux GOARCH=amd64 f
 CHANNEL=$channel GOOS=linux GOARCH=386 GO386=387 f
+CHANNEL=$channel GOOS=linux GOARCH=arm GOARM=5 f
 CHANNEL=$channel GOOS=linux GOARCH=arm GOARM=6 f
 CHANNEL=$channel GOOS=linux GOARCH=arm64 GOARM=6 f
 CHANNEL=$channel GOOS=windows GOARCH=amd64 f
@@ -58,7 +63,8 @@ echo "  \"download_windows_386\": \"$baseUrl/AdGuardHome_Windows_386.zip\"," >> 
 echo "  \"download_darwin_amd64\": \"$baseUrl/AdGuardHome_MacOS.zip\"," >> $dst/version.json
 echo "  \"download_linux_amd64\": \"$baseUrl/AdGuardHome_linux_amd64.tar.gz\"," >> $dst/version.json
 echo "  \"download_linux_386\": \"$baseUrl/AdGuardHome_linux_386.tar.gz\"," >> $dst/version.json
-echo "  \"download_linux_arm\": \"$baseUrl/AdGuardHome_linux_arm.tar.gz\"," >> $dst/version.json
+echo "  \"download_linux_armv5\": \"$baseUrl/AdGuardHome_linux_armv5.tar.gz\"," >> $dst/version.json
+echo "  \"download_linux_armv6\": \"$baseUrl/AdGuardHome_linux_armv6.tar.gz\"," >> $dst/version.json
 echo "  \"download_linux_arm64\": \"$baseUrl/AdGuardHome_linux_arm64.tar.gz\"," >> $dst/version.json
 echo "  \"download_linux_mips\": \"$baseUrl/AdGuardHome_linux_mips.tar.gz\"," >> $dst/version.json
 echo "  \"download_linux_mipsle\": \"$baseUrl/AdGuardHome_linux_mipsle.tar.gz\"," >> $dst/version.json
