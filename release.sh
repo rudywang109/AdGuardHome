@@ -12,17 +12,17 @@ version=`git describe --abbrev=4 --dirty --always --tags`
 f() {
 	make cleanfast; CGO_DISABLED=1 make
 	if [[ $GOOS == darwin ]]; then
-	    zip $dst/AdGuardHome_MacOS.zip AdGuardHome README.md LICENSE.txt
+		zip $dst/AdGuardHome_MacOS.zip AdGuardHome README.md LICENSE.txt
 	elif [[ $GOOS == windows ]]; then
-	    zip $dst/AdGuardHome_Windows_"$GOARCH".zip AdGuardHome.exe README.md LICENSE.txt
+		zip $dst/AdGuardHome_Windows_"$GOARCH".zip AdGuardHome.exe README.md LICENSE.txt
 	else
-	    rm -rf dist/AdguardHome
-	    mkdir -p dist/AdGuardHome
-	    cp -pv {AdGuardHome,LICENSE.txt,README.md} dist/AdGuardHome/
-	    pushd dist
-	    tar zcvf AdGuardHome_"$GOOS"_"$GOARCH".tar.gz AdGuardHome/
-	    popd
-	    rm -rf dist/AdguardHome
+		rm -rf dist/AdguardHome
+		mkdir -p dist/AdGuardHome
+		cp -pv {AdGuardHome,LICENSE.txt,README.md} dist/AdGuardHome/
+		pushd dist
+		tar zcvf AdGuardHome_"$GOOS"_"$GOARCH".tar.gz AdGuardHome/
+		popd
+		rm -rf dist/AdguardHome
 	fi
 }
 
