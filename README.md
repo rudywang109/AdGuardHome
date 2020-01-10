@@ -170,7 +170,8 @@ or you can use the Docker image from the `edge` tag, which is synced with the re
 
 * [Docker Hub](https://hub.docker.com/r/adguard/adguardhome)
 * Beta builds
-    * [Rapsberry Pi (32-bit ARM)](https://static.adguard.com/adguardhome/beta/AdGuardHome_linux_arm.tar.gz)
+    * [Raspberry Pi (32-bit ARMv5)](https://static.adguard.com/adguardhome/beta/AdGuardHome_linux_armv5.tar.gz)
+    * [Raspberry Pi (32-bit ARMv6)](https://static.adguard.com/adguardhome/beta/AdGuardHome_linux_armv6.tar.gz)
     * [MacOS](https://static.adguard.com/adguardhome/beta/AdGuardHome_MacOS.zip)
     * [Windows 64-bit](https://static.adguard.com/adguardhome/beta/AdGuardHome_Windows_amd64.zip)
     * [Windows 32-bit](https://static.adguard.com/adguardhome/beta/AdGuardHome_Windows_386.zip)
