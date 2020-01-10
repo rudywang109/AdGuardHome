@@ -43,7 +43,7 @@ func getVersionResp(data []byte) []byte {
 	}
 
 	dloadName := fmt.Sprintf("download_%s_%s", runtime.GOOS, runtime.GOARCH)
-	if runtime.GOARCH == "arm" {
+	if runtime.GOARCH == "arm" && ARMVersion != "6" {
 		dloadName = fmt.Sprintf("download_%s_%sv%s", runtime.GOOS, runtime.GOARCH, ARMVersion)
 	}
 	_, ok := versionJSON[dloadName]
