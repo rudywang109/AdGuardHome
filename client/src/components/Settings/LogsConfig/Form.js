@@ -28,15 +28,7 @@ const getIntervalFields = (processing, t, toNumber) =>
 
 const Form = (props) => {
     const {
-        handleSubmit,
-        submitting,
-        invalid,
-        processing,
-        processingClear,
-        handleClear,
-        t,
-        interval,
-        enabled,
+        handleSubmit, submitting, invalid, processing, processingClear, handleClear, t,
     } = props;
 
     return (
@@ -50,18 +42,6 @@ const Form = (props) => {
                     disabled={processing}
                 />
             </div>
-            {(enabled && interval !== 1) &&
-            <div className="form__group form__group--settings">
-                <Field
-                    name="displayDate"
-                    type="checkbox"
-                    component={renderSelectField}
-                    placeholder={t('display_date')}
-                    disabled={processing}
-                    subtitle={t('query_log_display_date')}
-                />
-                <div data-tooltip={t('requests_not_made_today')} className="tooltip-custom tooltip-custom--narrow tooltip-custom--narrow tooltip-custom--lower"/>
-            </div>}
             <label className="form__label">
                 <Trans>query_log_retention</Trans>
             </label>
@@ -99,8 +79,6 @@ Form.propTypes = {
     processing: PropTypes.bool.isRequired,
     processingClear: PropTypes.bool.isRequired,
     t: PropTypes.func.isRequired,
-    interval: PropTypes.number.isRequired,
-    enabled: PropTypes.bool.isRequired,
 };
 
 export default flow([

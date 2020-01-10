@@ -105,7 +105,6 @@ class Settings extends Component {
                             <div className="col-md-12">
                                 <LogsConfig
                                     enabled={queryLogs.enabled}
-                                    displayDate={queryLogs.displayDate}
                                     interval={queryLogs.interval}
                                     processing={queryLogs.processingSetConfig}
                                     processingClear={queryLogs.processingClear}

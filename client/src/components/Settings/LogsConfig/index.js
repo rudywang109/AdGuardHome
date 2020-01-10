@@ -30,7 +30,7 @@ class LogsConfig extends Component {
 
     render() {
         const {
-            t, enabled, interval, processing, processingClear, displayDate,
+            t, enabled, interval, processing, processingClear,
         } = this.props;
 
         return (
@@ -44,14 +44,11 @@ class LogsConfig extends Component {
                         initialValues={{
                             enabled,
                             interval,
-                            displayDate,
                         }}
                         onSubmit={this.handleFormSubmit}
                         processing={processing}
                         processingClear={processingClear}
                         handleClear={this.handleClear}
-                        interval={interval}
-                        enabled={enabled}
                     />
                 </div>
             </Card>
@@ -63,7 +60,6 @@ LogsConfig.propTypes = {
     interval: PropTypes.number.isRequired,
     enabled: PropTypes.bool.isRequired,
     processing: PropTypes.bool.isRequired,
-    displayDate: PropTypes.bool.isRequired,
     processingClear: PropTypes.bool.isRequired,
     setLogsConfig: PropTypes.func.isRequired,
     clearLogs: PropTypes.func.isRequired,

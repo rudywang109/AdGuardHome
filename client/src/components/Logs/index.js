@@ -115,17 +115,14 @@ class Logs extends Component {
 
     checkWhiteList = reason => reason === FILTERED_STATUS.NOT_FILTERED_WHITE_LIST;
 
-    getTimeCell = ({ value }) => {
-        const { displayDate } = this.props.queryLogs;
-        return (
+    getTimeCell = ({ value }) => (
             <div className="logs__row">
-                <span className="logs__text" title={formatDateTime(value)}>
-                    {displayDate && formatTodayDate(value) !== formatTodayDate(Date.now())
-                        ? formatDateTime(value) : formatTime(value)}
-                </span>
+                    <span className="logs__text" title={formatDateTime(value)}>
+                        {formatTodayDate(value) === formatTodayDate(Date.now())
+                            ? formatTime(value) : formatDateTime(value)}
+                    </span>
             </div>
-        );
-    };
+    );
 
     getDomainCell = (row) => {
         const response = row.value;
@@ -260,9 +257,9 @@ class Logs extends Component {
 
         const columns = [
             {
-                Header: queryLogs.displayDate ? t('date_table_header') : t('time_table_header'),
+                Header: t('time_table_header'),
                 accessor: 'time',
-                minWidth: 110,
+                minWidth: 105,
                 Cell: this.getTimeCell,
             },
             {
