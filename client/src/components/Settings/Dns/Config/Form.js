@@ -73,6 +73,7 @@ let Form = ({
                         component={renderSelectField}
                         placeholder={t('disable_ipv6')}
                         disabled={processing}
+                        subtitle={t('disable_ipv6_desc')}
                     />
                 </div>
             </div>
